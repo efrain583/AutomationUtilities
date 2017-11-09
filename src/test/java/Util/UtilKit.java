@@ -6,6 +6,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -46,6 +47,7 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 
 import org.testng.ITestResult;
+import org.testng.internal.TestResult;
 
 public class UtilKit {
 
@@ -156,14 +158,14 @@ public class UtilKit {
 		return driver;
 	}
 
-	public static void initMethod(String testMethodName) {
+	public static void initMethod(Method  method) {
 
 		startTime = System.currentTimeMillis();
 		if (logger == null) {
-			logger = Logger.getLogger(application + "." + testMethodName);
+			logger = Logger.getLogger(application + "." + method.getName());
 			PropertyConfigurator.configure(projectFolder + "/" + projectName  + "/" + application + resourcesFolder + "/log4j.properties");
 		}	
-		logger.info("Test Method : " + className + ":" + testMethodName + " Started at " + getDateTime());
+		logger.info("Test Method : " + className + ":" + method.getName() + " Started at " + getDateTime());
 	}
 
 	private static boolean dbConnect() {
