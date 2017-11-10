@@ -272,7 +272,7 @@ public class UtilKit {
 	public static void terminateTest(WebDriver driver) {
 		driver.manage().deleteAllCookies();
 		driver.close(); // Close Windows
-		//driver.quit(); // End Session Safely
+		driver.quit(); // End Session Safely
 	}
 
 	// Take the Screen Shot and capture in a file
