@@ -271,7 +271,7 @@ public class UtilKit {
 
 	public static void terminateTest(WebDriver driver) {
 		driver.manage().deleteAllCookies();
-		driver.close(); // Close Windows
+	//	driver.close(); // Close Windows (redundant since quit() also closes all browser windows)
 		driver.quit(); // End Session Safely
 	}
 
@@ -416,6 +416,9 @@ public class UtilKit {
 		}
 		if (propStrings[0].equals("partialLinkText")) {
 			return (By.partialLinkText(propStrings[1]));
+		}
+		if (propStrings[0].equals("tagName")) {
+			return (By.tagName(propStrings[1]));
 		}
 
 		logger.fatal("Invalid Locator :" + propStrings[0] + "." + propStrings[1]);
