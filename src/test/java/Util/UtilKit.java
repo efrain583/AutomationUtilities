@@ -23,9 +23,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+//import com.jcabi.log.Logger;
+import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.NDC;
 import org.apache.log4j.PropertyConfigurator;
-import org.apache.poi.util.SystemOutLogger;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
@@ -47,7 +49,6 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 
 import org.testng.ITestResult;
-import org.testng.internal.TestResult;
 
 public class UtilKit {
 
@@ -60,6 +61,7 @@ public class UtilKit {
 	private static Properties configProperties = new Properties();
 	private static Properties UIMapProperties = new Properties();
 	private static Properties DBProperties = new Properties();
+	private static String logLevel = null;
 	public static Logger logger = null;
 	private static long startTime;
 	private static long endTime;
@@ -77,27 +79,33 @@ public class UtilKit {
 		application = inApplication;
 		DesiredCapabilities caps = null;
 
-		System.out.println( "============================================================================================" );
-		if(projectFolder.isEmpty())
-			projectFolder = System.getenv("GIT_LOCAL_REPOSITORY");
-		System.out.println( "Project : " + project + "          Application : " + inApplication );
-		System.out.println("Project Repository: " + projectFolder);
-		System.out.println( "============================================================================================" );
-
 		// Load configurations
 		UtilKit.loadConfigProperties(application);
 		UtilKit.loadUIMapProperties(application);
 
+		if (logger == null) {
+
+			UtilKit.createLogger();
+		}	
+
+		logger.info( "============================================================================================" );
+		if(projectFolder.isEmpty())
+			projectFolder = System.getenv("GIT_LOCAL_REPOSITORY");
+		logger.info( "Project : " + project + "          Application : " + inApplication );
+		logger.info("Project Repository: " + projectFolder);
+		logger.info("============================================================================================" );
 		if(inBrowser.isEmpty())
 			browser = getConfigProp("BROWSER");
 		else
 			browser=inBrowser;
 		if (browser.equalsIgnoreCase("firefox")){
 			System.setProperty("webdriver.gecko.driver", getConfigProp("GECKO_DRIVER"));
-			System.out.println("Gecko Driver prop : " + System.getProperty("webdriver.gecko.driver"));
+			logger.info("Gecko Driver prop : " + System.getProperty("webdriver.gecko.driver"));
 			caps  = DesiredCapabilities.firefox();
 			caps.setCapability("browserName", browser);
 			//caps.setCapability("logLevel", "DEBUG");
+			//caps.setCapability("logLevel", "SEVERE");
+			caps.setCapability("logLevel", "OFF");
 			caps.setCapability("requireWindowFocus", true);
 // Skip the firefox version for now
 			version = getConfigProp("BROWSER_VERSION");
@@ -139,7 +147,7 @@ public class UtilKit {
 			// navegate Again to application Url
 			navegateToBaseURL(driver);
 		} else {
-			System.out.println("Initialization FATAL Error : Invalid Browser : " + browser + " Exiting Test .........");
+			logger.fatal("Initialization FATAL Error : Invalid Browser : " + browser + " Exiting Test .........");
 			System.exit(10);
 
 		}
@@ -149,27 +157,49 @@ public class UtilKit {
 		driver.manage().timeouts().pageLoadTimeout(Long.valueOf(getConfigProp("PAGE_LOAD_WAIT")), TimeUnit.SECONDS);
 		
 		UtilKit.waitForPageToLoad(driver, 5);
-		System.out.println( "Browser : " + browser + " Version : " + caps.getCapability("version") );
-		System.out.println(("\n\t\tImplicit wait = " + getConfigProp("IMPLICIT_WAIT") + "\n"));
-		System.out.println("Driver Time out String " + driver.manage().timeouts().toString());
+		logger.info("Browser : " + browser + " Version : " + caps.getCapability("version"));
+		logger.info(("\n\t\tImplicit wait = " + getConfigProp("IMPLICIT_WAIT") + "\n"));
+		logger.info("Driver Time out String " + driver.manage().timeouts().toString());
 
 		//driver.manage().window().maximize();
 		
+		if (logger == null) {
+			UtilKit.createLogger();
+		}	
+
 		return driver;
+	}
+
+	/**
+	 * 
+	 */
+	private static void createLogger() {
+		System.setProperty("com.jcabi.log.coloring", "true"); // Not working in windows for now
+		logger = Logger.getLogger(application + "." + className);
+		PropertyConfigurator.configure(projectFolder + "/" + projectName  + "/" + application + resourcesFolder + "/log4j.properties");
+
+		NDC.pop(); // Make sure the stack is empty first
+		NDC.push(application.toUpperCase());
+
+		logLevel = UtilKit.getConfigProp("LOG_LEVEL");
+		if(logLevel != null){
+			logger.setLevel(Level.toLevel(logLevel));
+		}
+		logger.info("LOG LEVEL : " + logger.getEffectiveLevel().toString());
 	}
 
 	public static void initMethod(Method  method) {
 
 		startTime = System.currentTimeMillis();
 		if (logger == null) {
-			logger = Logger.getLogger(application + "." + method.getName());
-			PropertyConfigurator.configure(projectFolder + "/" + projectName  + "/" + application + resourcesFolder + "/log4j.properties");
+			UtilKit.createLogger();
 		}	
 		logger.info("Test Method : " + className + ":" + method.getName() + " Started at " + getDateTime());
 	}
 
 	private static boolean dbConnect() {
 
+		logger.debug("Entering dbConnect");
 		logger.info("Connecting to " + getDBProp("DBCONN_URL"));
 		try {
 			// Initiate a JDBC Connection
@@ -182,12 +212,14 @@ public class UtilKit {
 		try {
 			if (dbConn.isValid(10)) { // 10 seconds timeout
 				logger.info("DB Connection Success : " + getDBProp("DBCONN_URL"));
+				logger.debug("Exiting dbConnect");
 				return true;
 			}
 		} catch (SQLException e) {
 			logger.fatal("DB Connection Invalid Exception : " + getDBProp("DBCONN_URL"));
 			e.printStackTrace();
 		}
+		logger.debug("Exiting dbConnect");
 		return false;
 	}
 
@@ -211,8 +243,7 @@ public class UtilKit {
 		}
 
 		if (logger == null) {
-			logger = Logger.getLogger(application + "." + testMethodName);
-			PropertyConfigurator.configure(projectFolder + "/" +  projectName  + "/" +  application +  resourcesFolder + "/log4j.properties");
+			UtilKit.createLogger();
 		}
 
 		// driver.setJavascriptEnabled(true); // Only for headles, enable
@@ -253,24 +284,24 @@ public class UtilKit {
 		 * namestr); }
 		 */
 
-		logger.info("Test Method : " + className + "."+ result.getMethod().getMethodName() + " Completed at : " + getDateTime()
-				+ " Elapsed Time in Seconds : " + (float) (endTime - startTime) / 1000 + "  Success Status = "
-				+ result.isSuccess() + "\n\n");
-
 		// Print current screen if the test case was not successful
 		if (!result.isSuccess()) {
 			UtilKit.printScreen(driver, result.getMethod().getMethodName());
+			logger.error("Test Method : " + className + "."+ result.getMethod().getMethodName() + " Completed at : " + getDateTime()
+				+ " Elapsed Time in Seconds : " + (float) (endTime - startTime) / 1000 + "  Status = FAIL"  + "\n");
 
 		}
-		try {
-			Thread.sleep(5000);
-		} catch (InterruptedException e) {
-			e.printStackTrace();
+		else {
+			logger.info("Test Method : " + className + "."+ result.getMethod().getMethodName() + " Completed at : " + getDateTime()
+				+ " Elapsed Time in Seconds : " + (float) (endTime - startTime) / 1000 + " Status = SUCCESS"  +"\n");
+			
 		}
+		UtilKit.suspendAction(1000);
 	}
 
 	public static void terminateTest(WebDriver driver) {
 		driver.manage().deleteAllCookies();
+		UtilKit.suspendAction(1000);
 	//	driver.close(); // Close Windows (redundant since quit() also closes all browser windows)
 		driver.quit(); // End Session Safely
 	}
@@ -281,7 +312,7 @@ public class UtilKit {
 			String destFileName = projectFolder + "/" + projectName + "/" + application + "/screenPrints/" + methodName + "_" + getPlainDateTime() + ".png";
 			File destFile = new File(destFileName);
 
-			System.out.println("File Name : " + destFileName);
+			logger.info("Screen Print File Name : " + destFileName);
 			destFile.createNewFile();
 
 			/*
@@ -435,14 +466,14 @@ public class UtilKit {
 	public static boolean waitForElement(By Locator, WebDriver driver, String state, int waitPeriod) {
 
 		float currentWait = (float) 0.0;
-		System.out.println("INFO : in : " + Thread.currentThread().getStackTrace()[1].getMethodName() + "Locator String :" +     Locator.toString());
+		logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + "Locator String :" +     Locator.toString());
 		while (currentWait < (float) waitPeriod) {
 
 			// =================================================================
 			if (state.equalsIgnoreCase("Exists")) {
 				List<WebElement> waitElementList = driver.findElements(Locator);
 				if (waitElementList.size() > 0) {
-					System.out.println("INFO : In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
+					logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
 							+ currentWait + " Seconds...");
 					return true;
 				}
@@ -453,7 +484,7 @@ public class UtilKit {
 				if (waitElementList.size() > 0) {
 					WebElement waitElement = driver.findElement(Locator);
 					if (waitElement.isDisplayed()) {
-						System.out.println("INFO : In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
+						logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
 								+ currentWait + " Seconds...");
 						return true;
 					}
@@ -465,7 +496,7 @@ public class UtilKit {
 				if (waitElementList.size() > 0) {
 					WebElement waitElement = driver.findElement(Locator);
 					if (waitElement.isEnabled()) {
-						System.out.println("INFO : In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
+						logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
 								+ currentWait + " Seconds...");
 						return true;
 					}
@@ -477,7 +508,7 @@ public class UtilKit {
 				if (waitElementList.size() > 0) {
 					WebElement waitElement = driver.findElement(Locator);
 					if (waitElement.isSelected()) {
-						System.out.println("INFO : In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
+						logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
 								+ currentWait + " Seconds...");
 						return true;
 					}
@@ -499,7 +530,7 @@ public class UtilKit {
 		}
 		// If it made it here then the time was expired and the Element did not
 		// reach the desired status
-		System.out.println("INFO : In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + ": " + state + ": " + Locator.toString() + " Expired after "
+		logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + ": " + state + ": " + Locator.toString() + " Expired after "
 				+ currentWait + " Seconds...");
 		return false;
 
@@ -510,7 +541,7 @@ public class UtilKit {
 		float currentWait = (float) 0.0;
 		while (currentWait < (float) waitPeriod) {
 			
-			System.out.println("Curren Wait : " + currentWait);
+			logger.info("Curren Wait : " + currentWait);
 
 			// =================================================================
 			try {
@@ -538,14 +569,14 @@ public class UtilKit {
 						}
 					}
 			} catch (Exception StaleElementReferenceException) {
-				System.out.println("Stale exception - 1");
+				logger.warn("Stale exception - 1");
 			}
 			/*
 			 * Do the actual wait here by sleeping for .25 of a second
 			 */
 			try {
 				Thread.sleep(250);
-				System.out.println("Stale exception - 2");
+				logger.warn("Stale exception - 2");
 			} catch (InterruptedException e) {
 				e.printStackTrace();
 			}
@@ -567,7 +598,7 @@ public class UtilKit {
 	public static boolean waitForPageToLoad(WebDriver driver, int waitPeriod) {
 
 		float currentWait = (float) 0.0;
-		System.out.println("INFO : in " + Thread.currentThread().getStackTrace()[1].getMethodName());
+		logger.info("In " + Thread.currentThread().getStackTrace()[1].getMethodName());
 		while (currentWait < (float)waitPeriod ) {
 			
 			String pageState = null;
@@ -582,15 +613,15 @@ public class UtilKit {
 			currentWait = currentWait + (float)0.25;
 			continue;
 			}
-			System.out.println("INFO: Page State : " + pageState);
+			logger.info("Page State : " + pageState);
 			if(pageState.equals("complete")){
-				System.out.println("INFO: Current Page Title : " + driver.getTitle());
+				logger.info("Current Page Title : " + driver.getTitle());
 				return true;
 
 			}
 		}
 		
-		System.out.println(" WARNNG : In " + Thread.currentThread().getStackTrace()[1].getMethodName() + "Wait for page to load expired");
+		logger.warn("Wait for page to load expired");
 		return false;
 	}	
 
@@ -625,14 +656,13 @@ public class UtilKit {
 		if (projectName.isEmpty())
 			projectName=project;
 		if (logger == null) {
-			logger = Logger.getLogger(application + "." + testCase);
-			PropertyConfigurator.configure(projectFolder + "/" + projectName + "/" + application + resourcesFolder + "/log4j.properties");
+			UtilKit.createLogger();
 		}
 		UtilKit.loadDBProperties(application); // Load the DB properties
 
 		// If a SQL statement is not provided for this This test case then use Excel Master Data file
 		// Otherwise use the SQL Database
-		System.out.println("BP PROP : " + application.toUpperCase() +"_" + testCase.toUpperCase() + "_SQL");
+		logger.info("BP PROP : " + application.toUpperCase() +"_" + testCase.toUpperCase() + "_SQL");
 		if (getDBProp(application.toUpperCase() +"_" + testCase.toUpperCase() + "_SQL") == null) {
 			return getExcelTestData(application, testCase);
 
@@ -698,7 +728,7 @@ public class UtilKit {
 			// get its row number
 			rs.last();
 			int rowCount = rs.getRow();
-			rs.beforeFirst(); // back to the begining
+			rs.beforeFirst(); // back to the beginning
 
 			int columnsCount = rsmd.getColumnCount();
 			logger.info("SQL Statement Excecuted :" + " Rows :" + rowCount + "  columns :" + columnsCount);
@@ -787,13 +817,13 @@ public class UtilKit {
 
 		
 		String secondPart = mySqlStm.replaceFirst("select", ""); // Replace "Select"
-		System.out.println("secondPart :" + secondPart);
+		logger.info("secondPart :" + secondPart);
 		
 		String [] rawColumns = secondPart.split("from"); // Cut after "From"
-		System.out.println("rawColumns :" + rawColumns[0] + ":");
+		logger.info("rawColumns :" + rawColumns[0] + ":");
 		
 		String plainColumns = rawColumns[0].replace(",", "");
-		System.out.println("plainColumns :" + plainColumns +":");
+		logger.info("plainColumns :" + plainColumns +":");
 		
 		
 		String columnsArray[] = plainColumns.split(" "); // Split on space
@@ -806,7 +836,7 @@ public class UtilKit {
 		}
 
 		for (String myColumn: columnsNames ){
-			System.out.println("column :" + myColumn + ":");
+			logger.info("column :" + myColumn + ":");
 		}
 		
 		return columnsNames;
@@ -861,8 +891,7 @@ public class UtilKit {
 		 * need to initialize Logger here before we can use it
 		 */
 		if (logger == null) {
-			logger = Logger.getLogger(application + "." + testCase);
-			PropertyConfigurator.configure(projectFolder + "/" + projectName + "/" + application + resourcesFolder + "/log4j.properties");
+			UtilKit.createLogger();
 		}
 
 		// XSSFWorkbook requires an InputStream as a parameter
@@ -1002,7 +1031,7 @@ public class UtilKit {
 		// This is done by executing a javaScript
 		String scriptContent = new String(
 				"window.scrollTo(" + coordinates.getX() + "," + (coordinates.getY()) + ")");
-		System.out.println("Scrolling to :" + coordinates.getX() + "," + coordinates.getY());
+		logger.info("Scrolling to :" + coordinates.getX() + "," + coordinates.getY());
 		UtilKit.executeJavascript(driver, scriptContent);
 
 	}
@@ -1200,47 +1229,47 @@ public class UtilKit {
 		int i = 0;
 		int j = 0; //allFramesList index
 		try {
-			System.out.println("Finding Frames in Page Title : " + driver.getTitle());
+			logger.info("Finding Frames in Page Title : " + driver.getTitle());
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
 
 		List<WebElement> frameList = driver.findElements(By.tagName("frame"));
-		System.out.println("----------------------Frame count : " + frameList.size()
+		logger.info("----------------------Frame count : " + frameList.size()
 				+ "------------------------------------------------------");
 		for (WebElement element : frameList) {
 			allFramesList.add(j, element); j++;
-			System.out.println("Frame No: " + i + " Frame Title: " + element.getAttribute("title") + "  Frame Name : "
+			logger.info("Frame No: " + i + " Frame Title: " + element.getAttribute("title") + "  Frame Name : "
 					+ element.getAttribute("name"));
-			System.out.println("Frame HTML: " + element.getAttribute("outerHTML"));
-			System.out.println("----------------------------------------------------------------------------");
+			logger.info("Frame HTML: " + element.getAttribute("outerHTML"));
+			logger.info("----------------------------------------------------------------------------");
 			i++;
 		}
 
 		i = 0;
 		List<WebElement> iframeList = driver.findElements(By.tagName("iframe"));
-		System.out.println("----------------------iFrame count : " + iframeList.size()
+		logger.info("----------------------iFrame count : " + iframeList.size()
 				+ "------------------------------------------------------");
 		for (WebElement element : iframeList) {
 			allFramesList.add(j, element); j++;
-			System.out.println("iFrame No: " + i + " iFrame Title: " + element.getAttribute("title")
+			logger.info("iFrame No: " + i + " iFrame Title: " + element.getAttribute("title")
 					+ "  iFrame Name : " + element.getAttribute("name"));
-			System.out.println("iFrame HTML: " + element.getAttribute("outerHTML"));
-			System.out.println("----------------------------------------------------------------------------");
+			logger.info("iFrame HTML: " + element.getAttribute("outerHTML"));
+			logger.info("----------------------------------------------------------------------------");
 			i++;
 		}
 
 		i = 0;
 		List<WebElement> frameSetList = driver.findElements(By.tagName("frameset"));
-		System.out.println("----------------------FrameSet count : " + frameSetList.size()
+		logger.info("----------------------FrameSet count : " + frameSetList.size()
 				+ "------------------------------------------------------");
 		for (WebElement element : frameSetList) {
 			allFramesList.add(j, element); j++;
-			System.out.println("FrameSet No: " + i + " FrameSet Title: " + element.getAttribute("title")
+			logger.info("FrameSet No: " + i + " FrameSet Title: " + element.getAttribute("title")
 					+ "  Frame Set Name : " + element.getAttribute("name"));
-			System.out.println("FrameSet HTML: " + element.getAttribute("outerHTML"));
-			System.out.println("----------------------------------------------------------------------------");
+			logger.info("FrameSet HTML: " + element.getAttribute("outerHTML"));
+			logger.info("----------------------------------------------------------------------------");
 			i++;
 		}
 		
