@@ -6,6 +6,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.Reader;
+import java.io.StringReader;
 import java.lang.reflect.Method;
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -23,6 +25,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
 import org.apache.commons.io.FileUtils;
+import org.apache.commons.lang3.time.StopWatch;
 //import com.jcabi.log.Logger;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
@@ -31,12 +34,15 @@ import org.apache.log4j.PropertyConfigurator;
 import org.apache.poi.xssf.usermodel.XSSFRow;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.fluttercode.datafactory.impl.DataFactory;
+import org.openqa.selenium.Alert;
 import org.openqa.selenium.By;
 import org.openqa.selenium.JavascriptException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
 import org.openqa.selenium.Point;
+import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
@@ -48,7 +54,15 @@ import org.openqa.selenium.remote.DesiredCapabilities;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 
+import net.sf.jsqlparser.JSQLParserException;
+import net.sf.jsqlparser.parser.CCJSqlParserManager;
+import net.sf.jsqlparser.statement.select.PlainSelect;
+import net.sf.jsqlparser.statement.select.Select;
+import net.sf.jsqlparser.statement.select.SelectBody;
+import net.sf.jsqlparser.statement.select.SelectItem;
+
 import org.testng.ITestResult;
+import org.testng.annotations.Test;
 
 public class UtilKit {
 
@@ -63,6 +77,8 @@ public class UtilKit {
 	private static Properties DBProperties = new Properties();
 	private static String logLevel = null;
 	public static Logger logger = null;
+	public static StopWatch stopWatch = new StopWatch();
+	public static DataFactory dataFactory = new DataFactory();
 	private static long startTime;
 	private static long endTime;
 	private static String browser;
@@ -190,11 +206,33 @@ public class UtilKit {
 
 	public static void initMethod(Method  method) {
 
-		startTime = System.currentTimeMillis();
 		if (logger == null) {
 			UtilKit.createLogger();
 		}	
+
+		startTime = System.currentTimeMillis();
+		if(UtilKit.getConfigProp("PERFORMANCE").equalsIgnoreCase("yes") || methodInGroup(method, "performance")){
+			if(stopWatch.isStarted())
+				stopWatch.stop(); // Make sure it starts fresh
+			stopWatch.reset();
+			stopWatch.start();
+		}
 		logger.info("Test Method : " + className + ":" + method.getName() + " Started at " + getDateTime());
+	}
+
+	/**
+	 * @param method
+	 */
+	public static boolean methodInGroup(Method method, String inGroup) {
+		Test testAnnotation = method.getAnnotation(Test.class);
+		String[] testGroups = testAnnotation.groups();
+		for(String testGroup :  testGroups){
+			if(testGroup.equalsIgnoreCase(inGroup)){
+				logger.info(method.getName() + " In Group : " + testGroup);
+				return true;
+			}
+		}
+		return false;
 	}
 
 	private static boolean dbConnect() {
@@ -296,7 +334,26 @@ public class UtilKit {
 				+ " Elapsed Time in Seconds : " + (float) (endTime - startTime) / 1000 + " Status = SUCCESS"  +"\n");
 			
 		}
+		if(getConfigProp("PERFORMANCE").equalsIgnoreCase("true") || methodInGroup(result, "performance")){
+			float elapsedTime = ((float)stopWatch.getTime()) /1000;
+			logger.info(result.getMethod().getMethodName() + "  PERFORMANCE Time: " + elapsedTime);
+			stopWatch.stop();
+		}
 		UtilKit.suspendAction(1000);
+	}
+
+	/**
+	 * @param result
+	 */
+	public static boolean methodInGroup(ITestResult result, String inGroup) {
+		String[] methodGroups = result.getMethod().getGroups();
+		for (String methodGroup : methodGroups) {
+			if (methodGroup.equalsIgnoreCase(inGroup)) {
+				logger.info(result.getMethod().getMethodName() + " In Group :" + methodGroup);
+				return true;
+			}
+		}
+			return false;
 	}
 
 	public static void terminateTest(WebDriver driver) {
@@ -402,6 +459,10 @@ public class UtilKit {
 	}
 
 	public static String getConfigProp(String property) {
+		if(configProperties.getProperty(property) == null){
+			logger.warn("Property : " + property + " Undefined ") ;
+			return String.valueOf("UNDEFINED");
+		}
 		return (configProperties.getProperty(property));
 	}
 
@@ -547,24 +608,27 @@ public class UtilKit {
 			try {
 				if (state.equalsIgnoreCase("Displayed")) {
 						if (waitElement.isDisplayed()) {
-							logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
-									+ currentWait + " Seconds...");
+							logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + 
+									" on Displayed state " +
+									" Waited for " + currentWait + " Seconds...");
 							return true;
 						}
 					}
 				// =================================================================
 				if (state.equalsIgnoreCase("Enabled")) {
 						if (waitElement.isEnabled()) {
-							logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
-									+ currentWait + " Seconds...");
+							logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + 
+									" on Enabled state " +
+									" Waited for " + currentWait + " Seconds...");
 							return true;
 						}
 					}
 				// ===============================================================
 				if (state.equalsIgnoreCase("Selected")) {
 						if (waitElement.isSelected()) {
-							logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " Waited for "
-									+ currentWait + " Seconds...");
+							logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + 
+									" on Selected State " +
+									" Waited for " + currentWait + " Seconds...");
 							return true;
 						}
 					}
@@ -613,9 +677,9 @@ public class UtilKit {
 			currentWait = currentWait + (float)0.25;
 			continue;
 			}
-			logger.info("Page State : " + pageState);
+			logger.debug("Page State : " + pageState);
 			if(pageState.equals("complete")){
-				logger.info("Current Page Title : " + driver.getTitle());
+				logger.debug("Current Page Title : " + driver.getTitle());
 				return true;
 
 			}
@@ -716,7 +780,7 @@ public class UtilKit {
 			logger.info("Executing SQL :" + stString);
 
 			// Parse the columns names from the SQL statement
-			String columnNames[] = UtilKit.parseColumns(stString);
+			String columnNames[] = UtilKit.parseColumnsNew(stString);
 			logger.info("Column Names :" + columnNames);
 
 			ResultSet rs = st.executeQuery(stString);
@@ -741,8 +805,8 @@ public class UtilKit {
 				rs.next();
 				for (int j = 0; j < columnNames.length; j++) {
 					logger.info("In : " + Thread.currentThread().getStackTrace()[1].getMethodName() + " DB Loading : "
-							+ columnNames[j] + " : " + rs.getString(columnNames[j]));
-					testDataArray[i][j] = rs.getString(columnNames[j]);
+							+ columnNames[j] + " : " + rs.getString(j +1)/*rs.getString(columnNames[j])*/);
+					testDataArray[i][j] = rs.getString(j+1);
 				}
 			}
 			return testDataArray;
@@ -809,6 +873,37 @@ public class UtilKit {
 			e.printStackTrace();
 		}
 		return null;
+	}
+	
+	public static String [] parseColumnsNew(String sqlStmtStr){
+
+		CCJSqlParserManager parseManager = new CCJSqlParserManager();
+		StringReader sqlStmtRead = new StringReader(sqlStmtStr);
+		String [] columnsNames = null;
+
+		try {
+			// Need to be specific here since the is also the Java SQL Statement in this class 
+			net.sf.jsqlparser.statement.Statement parsedStmt = parseManager.parse(sqlStmtRead);
+			
+			Select selectStmt = (Select)parsedStmt;
+			
+			SelectBody selectBody = selectStmt.getSelectBody();
+			
+			PlainSelect plainSelect = (PlainSelect)selectBody;
+			List<SelectItem> selectedItems = plainSelect.getSelectItems();
+			columnsNames = new String[selectedItems.size()]; // The first string is not used, is just space
+			for (int i = 0; i < selectedItems.size(); i++){
+				columnsNames[i] = selectedItems.get(i).toString();
+				System.out.println("Selected Item : " + selectedItems.get(i).toString());
+			}
+
+			System.out.println("==================================================================================");
+		} catch (JSQLParserException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return columnsNames;
+
 	}
 	
 	private static String [] parseColumns(String sqlStm){
@@ -1275,4 +1370,47 @@ public class UtilKit {
 		
 		return allFramesList;
 	}
+	
+	/**
+	 * @param myElement
+	 */
+	public static void highLiteElement(WebElement myElement, Actions mouseActions) {
+		Point eLocation = myElement.getLocation();
+		Rectangle eRect = myElement.getRect();
+		System.out.println("Element to highlite found : " + myElement.getText() + " Loc :" + eLocation.toString() + 
+				             " Rect : " + eRect.getX() + "," + eRect.getY() + "," + eRect.getWidth() + "," + eRect.getHeight());
+		System.out.println(" Dimension : " + eRect.getDimension().toString());
+		mouseActions.moveToElement(myElement, (eRect.getWidth() / 2) * -1, 0);
+		UtilKit.suspendAction(100);
+		mouseActions.clickAndHold().moveByOffset(eRect.getWidth(), 0).build().perform();
+		mouseActions.release().build().perform();
+		UtilKit.suspendAction(50);
+	}
+	
+	public static void printCurrentPageHTML(WebDriver driver){
+		System.out.println("\n================================================================================\n");
+		System.out.println("\t\t\tPage URL : " + driver.getCurrentUrl() +"\n");
+		System.out.println("\t\t\tPage Title : " + driver.getTitle() + "\n");
+		System.out.println("\t\t\tPage source :\n" + driver.getPageSource() +"\n");
+		System.out.println("\n================================================================================\n");
+	}
+	
+	public static boolean checkAlertMessage(WebDriver driver, String message) {
+
+		int counter = 0;
+		while (counter < 3) {
+			try {
+				Alert myAlert = driver.switchTo().alert();
+				UtilKit.logger.info("Alert Text : " + myAlert.getText());
+				if (myAlert.getText().contains(message))
+					return true;
+			} catch (Exception e) {
+				UtilKit.suspendAction(1000);
+				counter++;
+				continue;
+			}
+		}
+		return false;
+	}
+
 }
