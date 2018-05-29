@@ -24,6 +24,21 @@ import java.util.Properties;
 import java.util.concurrent.TimeUnit;
 import java.util.regex.Pattern;
 
+import javax.activation.DataHandler;
+import javax.activation.DataSource;
+import javax.activation.FileDataSource;
+import javax.mail.BodyPart;
+import javax.mail.Message;
+import javax.mail.MessagingException;
+import javax.mail.Multipart;
+import javax.mail.PasswordAuthentication;
+import javax.mail.Session;
+import javax.mail.Transport;
+import javax.mail.internet.InternetAddress;
+import javax.mail.internet.MimeBodyPart;
+import javax.mail.internet.MimeMessage;
+import javax.mail.internet.MimeMultipart;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.lang3.time.StopWatch;
 //import com.jcabi.log.Logger;
@@ -246,6 +261,7 @@ public class UtilKit {
 			// TODO Auto-generated catch block
 			logger.fatal("DB Connection Exception : " + getDBProp("DBCONN_URL"));
 			e.printStackTrace();
+			System.exit(10);
 		}
 		try {
 			if (dbConn.isValid(10)) { // 10 seconds timeout
@@ -256,6 +272,7 @@ public class UtilKit {
 		} catch (SQLException e) {
 			logger.fatal("DB Connection Invalid Exception : " + getDBProp("DBCONN_URL"));
 			e.printStackTrace();
+			System.exit(10);
 		}
 		logger.debug("Exiting dbConnect");
 		return false;
@@ -514,7 +531,7 @@ public class UtilKit {
 		}
 
 		logger.fatal("Invalid Locator :" + propStrings[0] + "." + propStrings[1]);
-		return (null);
+		return null;
 	}
 
 	public static String[] parseLocator(String property) {
@@ -814,6 +831,7 @@ public class UtilKit {
 		} catch (SQLException e) {
 			logger.fatal("Sql Exception generated ");
 			e.printStackTrace();
+			System.exit(10);
 		}
 
 		// Get the data from Excel is the default action
@@ -871,6 +889,7 @@ public class UtilKit {
 		} catch (SQLException e) {
 			logger.fatal("Sql Exception generated ");
 			e.printStackTrace();
+			System.exit(10);
 		}
 		return null;
 	}
@@ -969,6 +988,7 @@ public class UtilKit {
 		} catch (SQLException e) {
 			logger.fatal("Sql Exception generated ");
 			e.printStackTrace();
+			System.exit(10);
 		}
 		return null;
 	}
@@ -1412,5 +1432,86 @@ public class UtilKit {
 		}
 		return false;
 	}
+	
+	public static void sendRestResultsEMail( String resultsMessage){
+		
+//		SMTPHOST = smtp.gmail.com
+//		SMTPPROTOCOL = smtps
+//		SMTP.STARTTLS.ENABLE = true
+//		SMTP.AUTH = true
+//		SMTPPORT = 465 
+//		FROM = efrain583@gmail.com
+//		TO = efrain583@yahoo.com
+//		SMTPUSERNAME = efrain583
+//		SMTPPASSWORD = efrago1= 
+//		SUBJECT = Test Errors
+//		BUFFERSIZE = 512
+//		SMTPDEBUG = true
+		
+		final String userName = UtilKit.getConfigProp("SMTPUSERNAME");
+		//final String userName = "efrain583";
+		final String password = UtilKit.getConfigProp("SMTPPASSWORD");
+//		final String password = "efrago1=";
 
+		Properties props = new Properties();
+		//props.put("mail.smtp.auth", "true");
+		props.put("mail.smtp.auth", UtilKit.getConfigProp("SMTP.AUTH"));
+		//props.put("mail.smtp.starttls.enable", "true");
+		props.put("mail.smtp.starttls.enable", UtilKit.getConfigProp("SMTP.STARTTLS.ENABLE"));
+//		props.put("mail.smtp.host", "smtp.gmail.com");
+		props.put("mail.smtp.host", UtilKit.getConfigProp("SMTPHOST"));
+//		props.put("mail.smtp.port", "587");
+		props.put("mail.smtp.port", UtilKit.getConfigProp("SMTPPORT").toString());
+
+		Session session = Session.getInstance(props,
+		  new javax.mail.Authenticator() {
+			protected PasswordAuthentication getPasswordAuthentication() {
+				return new PasswordAuthentication(userName, password);
+			}
+		  });
+
+		try {
+
+			Message message = new MimeMessage(session);
+			message.setFrom(new InternetAddress(UtilKit.getConfigProp("FROM")));
+			message.setRecipients(Message.RecipientType.TO,
+				InternetAddress.parse(UtilKit.getConfigProp("TO")));
+			message.setSubject("Test Results - Do Not Reply");
+//			message.setText("Test Team," + "\n\n" + resultsMessage  
+//				+ "\n\n Do Not Reply, please!");
+
+			// Create the message part
+	         BodyPart messageBodyPart = new MimeBodyPart();
+
+	         // Now set the actual message
+			messageBodyPart.setText("Test Team," + "\n\n" + resultsMessage  
+				+ "\n\n Do Not Reply, please!");
+
+	         // Create a multipar message
+	         Multipart multipart = new MimeMultipart();
+
+	         // Set text message part
+	         multipart.addBodyPart(messageBodyPart);
+
+	         // Part two is attachment
+	         messageBodyPart = new MimeBodyPart();
+	         String filename = "/Users/efrain/git/in.automationtest/README.md";
+	         DataSource source = new FileDataSource(filename);
+	         messageBodyPart.setDataHandler(new DataHandler(source));
+	         messageBodyPart.setFileName(filename);
+	         multipart.addBodyPart(messageBodyPart);
+
+	         // Send the complete message parts
+	         message.setContent(multipart);
+
+	         // Send message
+	         Transport.send(message);
+
+	         System.out.println("Sent message successfully....");	
+			
+
+		} catch (MessagingException e) {
+			throw new RuntimeException(e);
+		}
+	}
 }
