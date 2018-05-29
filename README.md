@@ -1,4 +1,4 @@
-in.automationtest
+AutomationUtilities
 
 automation test Demo project
 
