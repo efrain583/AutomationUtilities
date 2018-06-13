@@ -1099,7 +1099,7 @@ public class UtilKit {
 				// findStr
 				// then add it to the row list
 				if (currRow.getCell(0).getStringCellValue().equalsIgnoreCase(findStr)) {
-					logger.info("Loading " + findStr + " Row : ");
+					logger.info("Reading " + findStr + " Row Number: " + currRow.getRowNum());
 					rowList.add(currRow);
 				}
 			}
@@ -1251,6 +1251,25 @@ public class UtilKit {
 	}
 	public static void javaScriptSendKeys(WebDriver driver, WebElement element, String keysString){
 		UtilKit.executeJavascriptOnElement(driver, "arguments[0].setAttribute('value'," + "'" + keysString + "')", element);
+		
+	}
+	public static String javaScriptGetValue(WebDriver driver, WebElement element){
+		
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		return (String) js.executeScript("return arguments[0].getAttribute('value')", element);
+		
+	}
+	public static String javaScriptGetClass(WebDriver driver, WebElement element){
+		
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		return (String) js.executeScript("return arguments[0].getAttribute('class')", element);
+		
+	}
+	public static String javaScriptGetHTML(WebDriver driver, WebElement element){
+		
+		JavascriptExecutor js = (JavascriptExecutor) driver;
+		//return (String) js.executeScript("return arguments[0].getAttribute('outerHTML')", element);
+		return (String) js.executeScript("return arguments[0].outerHTML", element);
 		
 	}
 
