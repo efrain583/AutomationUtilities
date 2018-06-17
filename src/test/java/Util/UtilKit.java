@@ -122,7 +122,7 @@ public class UtilKit {
 		logger.info( "============================================================================================" );
 		if(projectFolder.isEmpty())
 			projectFolder = System.getenv("GIT_LOCAL_REPOSITORY");
-		logger.info( "Project : " + project + "          Application : " + inApplication );
+		logger.info( "Project: " + project + "          Application: " + inApplication );
 		logger.info("Project Repository: " + projectFolder);
 		logger.info("============================================================================================" );
 		if(inBrowser.isEmpty())
@@ -131,7 +131,7 @@ public class UtilKit {
 			browser=inBrowser;
 		if (browser.equalsIgnoreCase("firefox")){
 			System.setProperty("webdriver.gecko.driver", getConfigProp("GECKO_DRIVER"));
-			logger.info("Gecko Driver prop : " + System.getProperty("webdriver.gecko.driver"));
+			logger.info("Gecko Driver prop: " + System.getProperty("webdriver.gecko.driver"));
 			caps  = DesiredCapabilities.firefox();
 			caps.setCapability("browserName", browser);
 			//caps.setCapability("logLevel", "DEBUG");
