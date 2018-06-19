@@ -81,7 +81,7 @@ import org.testng.annotations.Test;
 
 public class UtilKit {
 
-	private static String projectFolder = System.getenv("GIT_LOCAL_REPOSITORY");
+	provate static String projectFolder = System.getenv("GIT_LOCAL_REPOSITORY");
 
 	private static String resourcesFolder = "/src/test/resources";
 	private static String projectName = null;
