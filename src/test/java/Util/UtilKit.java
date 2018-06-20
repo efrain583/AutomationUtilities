@@ -1025,13 +1025,13 @@ public class UtilKit {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		XSSFSheet sheet = wb.getSheet(application); // Get the Sheet in the
-													// Workbook
+		XSSFSheet sheet = wb.getSheet(application); 
 		logger.info("sheet rows count :" + sheet.getLastRowNum());
 
 		// Instantiate the list of XSSF rows
 		ArrayList<XSSFRow> caseList = new ArrayList<XSSFRow>();
-
+		// Get the Sheet in the
+													// Workbook
 		caseList = UtilKit.findRows(sheet, testCase); // finds the list of rows
 														// matching
 		// the given test case String
