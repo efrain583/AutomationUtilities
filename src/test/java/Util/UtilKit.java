@@ -178,7 +178,7 @@ public class UtilKit {
 			// navegate Again to application Url
 			navegateToBaseURL(driver);
 		} else {
-			logger.fatal("Initialization FATAL Error : Invalid Browser : " + browser + " Exiting Test .........");
+			logger.fatal("Initialization FATAL Error : Invalid Browser: " + browser + " Exiting Test .........");
 			System.exit(10);
 
 		}
