@@ -4,7 +4,7 @@
  	<groupId>UtilKit</groupId> 
 <!-- 	<groupId>com.github.efrain583.AutomationUtilities</groupId> -->
 	<artifactId>AutomationUtilities</artifactId>
-	<version>1.0-test</version>
+	<version>1.0</version>
 	<name>AutomationUtilities</name>
 	<description>Generic Automation Utilities</description>
 	<packaging>jar</packaging>
@@ -160,12 +160,12 @@
  	<distributionManagement> 
      <repository> 
          <id>repo</id> 
-         <url>https://github.com/efrain583/AutomationUtilities/raw/master/target</url> 
+         <url>https://github.com/efrain583/AutomationUtilities/raw/master/releases</url> 
      </repository> 
-     <snapshotRepository> 
-         <id>snapshot-repo</id> 
-         <url>https://github.com/efrain583/AutomationUtilities/raw/master/target</url> 
-     </snapshotRepository> 
+<!--      <snapshotRepository>  -->
+<!--          <id>snapshot-repo</id>  -->
+<!--          <url>https://github.com/efrain583/AutomationUtilities/raw/master/target</url>  -->
+<!--      </snapshotRepository>  -->
  </distributionManagement> 
 
 </project>
