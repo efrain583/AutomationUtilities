@@ -24,10 +24,18 @@
 		<dependency.locations.enabled>false</dependency.locations.enabled>
 <!-- 		the below property should have an entry in settinbgs.xml matching <server< <id></id>  -->
 		<github.global.server>github</github.global.server>
+		<maven.build.timestamp.format>yyMMdd_HHmm</maven.build.timestamp.format>
+    	<buildNumber>${maven.build.timestamp}</buildNumber>
 	</properties>
 
 	<build>
 		<plugins>
+		<plugin>
+           <artifactId>maven-clean-plugin</artifactId>
+           <configuration>
+               <excludeDefaultDirectories>true</excludeDefaultDirectories>
+           </configuration>
+        </plugin>
 			<!-- The surefire plugin is used to run test cases and generate reports -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
@@ -85,7 +93,7 @@
 					<repositoryOwner>efrain583</repositoryOwner>
 					<repositoryName>AutomationUtilities</repositoryName>
 					<branch>refs/heads/master</branch>
-					<message>deploying .jar file for ${project.version}</message>
+					<message>deploying .jar file for ${project.groupId} on ${buildNumber}</message>
 				</configuration>
 				<executions>
 					<execution>
