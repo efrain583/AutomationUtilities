@@ -77,7 +77,8 @@
 				<artifactId>site-maven-plugin</artifactId>
 				<version>0.12</version>
 				<configuration>
-					<outputDirectory>${project.build.directory}</outputDirectory>
+<!-- 					<outputDirectory>${project.build.directory}/staging</outputDirectory> -->
+					<outputDirectory>C:\Users\efrain\git\AutomationUtilities\target\staging\UtilKit\AutomationUtilities\1.0</outputDirectory>
 					<includes>
 						<include>AutomationUtilities-1.0-tests.jar</include>
 					</includes>
@@ -188,8 +189,13 @@
     	</dependency>
 
 	</dependencies>
-	
-<!--  	<distributionManagement>  -->
+
+ 	<distributionManagement> 
+ 	<repository>
+ 		<id>AutomationUtilities-Staging</id>
+ 		<url>file://${project.build.directory}/staging</url>
+ 	</repository>
+ 	
 <!--  	the below code is not working for deploying to github -->
 <!--      <repository>  -->
 <!--          <id>AutomationUtilities</id>  -->
@@ -201,7 +207,7 @@
 <!--          <id>snapshot-repo</id>  -->
 <!--          <url>https://github.com/efrain583/AutomationUtilities/raw/master/target</url>  -->
 <!--      </snapshotRepository>  -->
-<!--  </distributionManagement>  -->
+ </distributionManagement> 
  
  <repositories>
     <repository>
