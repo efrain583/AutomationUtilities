@@ -22,6 +22,8 @@
 	<properties>
 		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
 		<dependency.locations.enabled>false</dependency.locations.enabled>
+<!-- 		the below property should have an entry in settinbgs.xml matching <server< <id></id>  -->
+		<github.global.server>github</github.global.server>
 	</properties>
 
 	<build>
@@ -49,27 +51,51 @@
 				</executions>
 			</plugin>
 			<plugin>
-	                <groupId>org.apache.maven.plugins</groupId>
-	                <artifactId>maven-assembly-plugin</artifactId>
-	                <version>3.1.0</version>
-	                <configuration>
-<!-- 	                    <descriptorRefs> -->
-<!-- 	                        <descriptorRef>src</descriptorRef> -->
-<!-- 	                    </descriptorRefs> -->
-	                    <descriptors>
-	                        <descriptor>assembly/assembly.xml</descriptor>
-	                    </descriptors>
-	                </configuration>
-	                <executions>
-	                    <execution>
-	                        <id>trigger-assembly</id>
-	                        <phase>package</phase>
-	                        <goals>
-	                            <goal>single</goal>
-	                        </goals>
-	                    </execution>
-	                </executions>
-	            </plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<version>3.1.0</version>
+				<configuration>
+					<!-- <descriptorRefs> -->
+					<!-- <descriptorRef>src</descriptorRef> -->
+					<!-- </descriptorRefs> -->
+					<descriptors>
+						<descriptor>assembly/assembly.xml</descriptor>
+					</descriptors>
+				</configuration>
+				<executions>
+					<execution>
+						<id>trigger-assembly</id>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>com.github.github</groupId>
+				<artifactId>site-maven-plugin</artifactId>
+				<version>0.12</version>
+				<configuration>
+					<outputDirectory>${project.build.directory}</outputDirectory>
+					<includes>
+						<include>AutomationUtilities-1.0-tests.jar</include>
+					</includes>
+					<repositoryOwner>efrain583</repositoryOwner>
+					<repositoryName>AutomationUtilities</repositoryName>
+					<branch>refs/heads/master</branch>
+					<message>deploying .jar file for ${project.version}</message>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>site</goal>
+						</goals>
+						<phase>deploy</phase>
+					</execution>
+				</executions>
+
+			</plugin>
 
 		</plugins>
 	</build>
@@ -155,17 +181,33 @@
     		<version>1.5.2</version>
 		</dependency>
 
+		<dependency>
+      		<groupId>com.github.vidstige</groupId>
+      		<artifactId>jadb</artifactId>
+      		<version>-v1.0-g94ebf38-23</version>
+    	</dependency>
+
 	</dependencies>
 	
- 	<distributionManagement> 
-     <repository> 
-         <id>repo</id> 
-         <url>https://github.com/efrain583/AutomationUtilities/raw/master/releases</url> 
-     </repository> 
+<!--  	<distributionManagement>  -->
+<!--  	the below code is not working for deploying to github -->
+<!--      <repository>  -->
+<!--          <id>AutomationUtilities</id>  -->
+<!--          <url>https://github.com/efrain583/AutomationUtilities/raw/master/releases</url>  -->
+<!--          <layout>default</layout> -->
+<!--      </repository>  -->
+
 <!--      <snapshotRepository>  -->
 <!--          <id>snapshot-repo</id>  -->
 <!--          <url>https://github.com/efrain583/AutomationUtilities/raw/master/target</url>  -->
 <!--      </snapshotRepository>  -->
- </distributionManagement> 
+<!--  </distributionManagement>  -->
+ 
+ <repositories>
+    <repository>
+    <id>jitpack.io</id>
+    <url>https://jitpack.io</url>
+    </repository>
+</repositories>
 
 </project>
