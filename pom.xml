@@ -85,7 +85,7 @@
 				<artifactId>site-maven-plugin</artifactId>
 				<version>0.12</version>
 				<configuration>
-<!-- 					<outputDirectory>${project.build.directory}/staging</outputDirectory> -->
+<!--  How about a target dir ??	<outputDirectory>${project.build.directory}/staging</outputDirectory> -->
 					<outputDirectory>C:\Users\efrain\git\AutomationUtilities\target\staging\UtilKit\AutomationUtilities\1.0</outputDirectory>
 					<includes>
 						<include>AutomationUtilities-1.0-tests.jar</include>
