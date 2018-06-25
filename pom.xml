@@ -24,7 +24,7 @@
 		<dependency.locations.enabled>false</dependency.locations.enabled>
 <!-- 		the below property should have an entry in settinbgs.xml matching <server< <id></id>  -->
 		<github.global.server>github</github.global.server>
-		<maven.build.timestamp.format>yyMMdd_HHmm</maven.build.timestamp.format>
+		<maven.build.timestamp.format>yyyyMMdd_HHmm</maven.build.timestamp.format>
     	<buildNumber>${maven.build.timestamp}</buildNumber>
 	</properties>
 
