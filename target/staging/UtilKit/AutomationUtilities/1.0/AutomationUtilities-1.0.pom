@@ -49,6 +49,7 @@
 <!-- 			</plugin> -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+<!-- 				The jar plug in to crearte the .jar containing all the java classes. Will be deployed to github for other projects to use  -->
 				<artifactId>maven-jar-plugin</artifactId>
 				<version>2.6</version>
 				<configuration>
@@ -65,6 +66,7 @@
 			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+<!-- 				The assembly plugin is used to create a project documentation assembly containing the sorce code and other info -->
 				<artifactId>maven-assembly-plugin</artifactId>
 				<version>3.1.0</version>
 				<configuration>
@@ -87,6 +89,7 @@
 			</plugin>
 			<plugin>
 				<groupId>com.github.github</groupId>
+<!-- 				To deploy the .jar file containing the class files  -->
 				<artifactId>site-maven-plugin</artifactId>
 				<version>0.12</version>
 				<configuration>
@@ -198,38 +201,14 @@
     		<version>1.5.2</version>
 		</dependency>
 
-		<dependency>
-      		<groupId>com.github.vidstige</groupId>
-      		<artifactId>jadb</artifactId>
-      		<version>-v1.0-g94ebf38-23</version>
-    	</dependency>
-
 	</dependencies>
 
+<!-- Distribution management is needed to be able to deploy .jar files to github -->
  	<distributionManagement> 
  	<repository>
  		<id>AutomationUtilities-Staging</id>
  		<url>file://${project.build.directory}/staging</url>
  	</repository>
- 	
-<!--  	the below code is not working for deploying to github -->
-<!--      <repository>  -->
-<!--          <id>AutomationUtilities</id>  -->
-<!--          <url>https://github.com/efrain583/AutomationUtilities/raw/master/releases</url>  -->
-<!--          <layout>default</layout> -->
-<!--      </repository>  -->
-
-<!--      <snapshotRepository>  -->
-<!--          <id>snapshot-repo</id>  -->
-<!--          <url>https://github.com/efrain583/AutomationUtilities/raw/master/target</url>  -->
-<!--      </snapshotRepository>  -->
  </distributionManagement> 
  
- <repositories>
-    <repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
-    </repository>
-</repositories>
-
 </project>

@@ -451,7 +451,8 @@ public class UtilKit {
 			// The load() call requires an InputStream Object.
 			// FileInputStream extends InputStream so it can also be used here
 			// as a parameter to load()
-			UIMapInputFile = new FileInputStream(getConfigProp(Application.toUpperCase() + "_UIMAP"));
+			UIMapInputFile = new FileInputStream(projectFolder + "/" + projectName + "/" + application + resourcesFolder + "/" +
+													getConfigProp(Application.toUpperCase() + "_UIMAP"));
 			UIMapProperties.load(UIMapInputFile);
 		} catch (FileNotFoundException e) {
 			e.printStackTrace();
