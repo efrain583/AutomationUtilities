@@ -110,10 +110,6 @@ public class UtilKit {
 		application = inApplication;
 		DesiredCapabilities caps = null;
 
-		// Load configurations
-		UtilKit.loadConfigProperties(application);
-		UtilKit.loadUIMapProperties(application);
-
 		if (logger == null) {
 
 			UtilKit.createLogger();
@@ -125,6 +121,10 @@ public class UtilKit {
 		logger.info( "Project: " + project + "          Application: " + inApplication );
 		logger.info("Project Repository: " + projectFolder);
 		logger.info("============================================================================================" );
+
+		// Load configurations
+		UtilKit.loadConfigProperties(application);
+		UtilKit.loadUIMapProperties(application);
 		if(inBrowser.isEmpty())
 			browser = getConfigProp("BROWSER");
 		else
