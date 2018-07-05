@@ -206,9 +206,11 @@ public class UtilKit {
 	 */
 	private static void createLogger() {
 		System.setProperty("com.jcabi.log.coloring", "true"); // Not working in windows for now
+		// the *_log_dir property is used to set the various log file names
+		System.setProperty(application + "_log_dir", projectFolder + "/" + projectName  + "/" + application);
 		logger = Logger.getLogger(application + "." + className);
 		PropertyConfigurator.configure(projectFolder + "/" + projectName  + "/" + application + resourcesFolder + "/log4j.properties");
-
+		
 		NDC.pop(); // Make sure the stack is empty first
 		NDC.push(application.toUpperCase());
 
