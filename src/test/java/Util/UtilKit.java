@@ -61,6 +61,7 @@ import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
+import org.openqa.selenium.chrome.ChromeDriver;
 import org.openqa.selenium.firefox.FirefoxDriver;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
@@ -140,8 +141,8 @@ public class UtilKit {
 			caps.setCapability("requireWindowFocus", true);
 // Skip the firefox version for now
 			version = getConfigProp("BROWSER_VERSION");
-//			caps.setCapability("version", version);
 //			caps.setVersion(version);
+
 			driver = new FirefoxDriver(caps);
 			driver.manage().deleteAllCookies();
 			// The Implicit wait time is a property and apply for all findElement() calls
@@ -149,6 +150,21 @@ public class UtilKit {
 			driver.manage().timeouts().pageLoadTimeout(Long.valueOf(getConfigProp("PAGE_LOAD_WAIT")), TimeUnit.SECONDS);
 			// navegate to application Url
 			navegateToBaseURL(driver);
+		}
+		else if (browser.equalsIgnoreCase("chrome")){
+			System.setProperty("webdriver.chrome.driver", getConfigProp("CHROME_DRIVER"));
+			logger.info("Chrome Driver prop: " + System.getProperty("webdriver.chrome.driver"));
+			caps  = DesiredCapabilities.chrome();
+
+			driver = new ChromeDriver(caps);
+			driver.manage().deleteAllCookies();
+			// The Implicit wait time is a property and apply for all findElement() calls
+			driver.manage().timeouts().implicitlyWait(Long.valueOf(getConfigProp("IMPLICIT_WAIT")), TimeUnit.SECONDS);
+			driver.manage().timeouts().pageLoadTimeout(Long.valueOf(getConfigProp("PAGE_LOAD_WAIT")), TimeUnit.SECONDS);
+			// navegate to application Url
+			navegateToBaseURL(driver);
+
+			
 		}
 		else if (browser.equalsIgnoreCase("ie")) {
 			
@@ -164,8 +180,8 @@ public class UtilKit {
 			caps.setCapability("ignoreProtectedModeSettings", true);
 			caps.setCapability("nativeEvents", false);
 			caps.setCapability("unexpectedAlertBehaviour", "accept");
-			
 			//caps.setCapability("logLevel", "DEBUG");
+
 			driver = new InternetExplorerDriver(caps);
 			// The Implicit wait time is a property and apply for all findElement() calls
 			driver.manage().timeouts().implicitlyWait(Long.valueOf(getConfigProp("IMPLICIT_WAIT")), TimeUnit.SECONDS);
@@ -177,17 +193,15 @@ public class UtilKit {
 			driver.manage().deleteAllCookies();
 			// navegate Again to application Url
 			navegateToBaseURL(driver);
+
 		} else {
 			logger.fatal("Initialization FATAL Error : Invalid Browser: " + browser + " Exiting Test .........");
 			System.exit(10);
 
 		}
 
-		// The Implicit wait time is a property and apply for all findElement() calls
-		driver.manage().timeouts().implicitlyWait(Long.valueOf(getConfigProp("IMPLICIT_WAIT")), TimeUnit.SECONDS);
-		driver.manage().timeouts().pageLoadTimeout(Long.valueOf(getConfigProp("PAGE_LOAD_WAIT")), TimeUnit.SECONDS);
-		
-		UtilKit.waitForPageToLoad(driver, 5);
+		UtilKit.waitForPageToLoad(driver, Integer.parseInt(getConfigProp("PAGE_LOAD_WAIT")));
+
 		logger.info("Browser : " + browser + " Version : " + caps.getCapability("version"));
 		logger.info(("\n\t\tImplicit wait = " + getConfigProp("IMPLICIT_WAIT") + "\n"));
 		logger.info("Driver Time out String " + driver.manage().timeouts().toString());
