@@ -65,6 +65,18 @@
 					</execution>
 				</executions>
 			</plugin>
+		    <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+     			 <artifactId>maven-source-plugin</artifactId>
+      			<executions>
+        			<execution>
+          			<id>attach-sources</id>
+          			<goals>
+            			<goal>test-jar</goal>
+          			</goals>
+        			</execution>
+      			</executions>
+    		</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 <!-- 				The assembly plugin is used to create a project documentation assembly containing the sorce code and other info -->
