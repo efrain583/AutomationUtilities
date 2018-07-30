@@ -65,6 +65,18 @@
 					</execution>
 				</executions>
 			</plugin>
+		    <plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+     			 <artifactId>maven-source-plugin</artifactId>
+      			<executions>
+        			<execution>
+          			<id>attach-sources</id>
+          			<goals>
+            			<goal>test-jar</goal>
+          			</goals>
+        			</execution>
+      			</executions>
+    		</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 <!-- 				The assembly plugin is used to create a project documentation assembly containing the sorce code and other info -->
@@ -99,6 +111,7 @@
 					<merge>true</merge>	
 					<includes>
 						<include>AutomationUtilities-1.0-tests.jar</include>
+						<include>AutomationUtilities-1.0-test-sources.jar</include>
 						<include>AutomationUtilities-1.0.jar</include>
 						<include>AutomationUtilities-1.0.pom</include>
 					</includes>
