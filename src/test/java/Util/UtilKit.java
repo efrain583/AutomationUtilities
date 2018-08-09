@@ -9,6 +9,8 @@ import java.io.IOException;
 import java.io.Reader;
 import java.io.StringReader;
 import java.lang.reflect.Method;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.ResultSet;
@@ -56,6 +58,7 @@ import org.openqa.selenium.JavascriptException;
 import org.openqa.selenium.JavascriptExecutor;
 import org.openqa.selenium.Keys;
 import org.openqa.selenium.OutputType;
+import org.openqa.selenium.Platform;
 import org.openqa.selenium.Point;
 import org.openqa.selenium.Rectangle;
 import org.openqa.selenium.TakesScreenshot;
@@ -67,6 +70,7 @@ import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.DesiredCapabilities;
+import org.openqa.selenium.remote.RemoteWebDriver;
 
 import com.gargoylesoftware.htmlunit.BrowserVersion;
 
@@ -101,6 +105,165 @@ public class UtilKit {
 	private static String version;
 
 	private static Connection dbConn = null; // JDBC Connection
+
+	public static WebDriver initGridTest(String project, String inApplication, String inBrowser, String gridNodeURL, String nodePlatform, String inClassName) {
+
+		RemoteWebDriver driver = null;
+		
+		projectName = project;
+		className = inClassName;
+		application = inApplication;
+		DesiredCapabilities caps = null;
+
+		if (logger == null) {
+
+			UtilKit.createLogger();
+		}	
+		
+		if(gridNodeURL.isEmpty()){
+			logger.fatal("No Grid Node Provided,  ... Exiting ", new Throwable("No Grid Node Provided"));
+			System.exit(22);
+		}
+		if(nodePlatform.isEmpty()){
+			logger.fatal("No Node Plattform Provided,  ... Exiting ", new Throwable("No Node Plattform Provided"));
+			System.exit(22);
+		}
+
+		logger.info( "============================================================================================" );
+		if(projectFolder.isEmpty())
+			projectFolder = System.getenv("GIT_LOCAL_REPOSITORY");
+		logger.info( "Project: " + project + "          Application: " + inApplication );
+		logger.info("Project Repository: " + projectFolder);
+		logger.info("Grid Node: " + gridNodeURL);
+		logger.info("Node Pattform: " + nodePlatform);
+		logger.info("============================================================================================" );
+
+		// Load configurations
+		UtilKit.loadConfigProperties(application);
+		UtilKit.loadUIMapProperties(application);
+		if(inBrowser.isEmpty())
+			browser = getConfigProp("BROWSER");
+		else
+			browser=inBrowser;
+		if (browser.equalsIgnoreCase("firefox")){
+			System.setProperty("webdriver.gecko.driver", getConfigProp("GECKO_DRIVER"));
+			logger.info("Gecko Driver prop: " + System.getProperty("webdriver.gecko.driver"));
+			caps  = DesiredCapabilities.firefox();
+			caps.setCapability("browserName", browser);
+			//caps.setCapability("logLevel", "DEBUG");
+			//caps.setCapability("logLevel", "SEVERE");
+			caps.setCapability("logLevel", "OFF");
+			caps.setCapability("requireWindowFocus", true);
+// Skip the firefox version for now
+			version = getConfigProp("BROWSER_VERSION");
+//			caps.setVersion(version);
+			
+			setCapsPlatform(nodePlatform, caps);
+			driver = new RemoteWebDriver(urlFactory(gridNodeURL), caps);
+
+			driver.manage().deleteAllCookies();
+			// The Implicit wait time is a property and apply for all findElement() calls
+			driver.manage().timeouts().implicitlyWait(Long.valueOf(getConfigProp("IMPLICIT_WAIT")), TimeUnit.SECONDS);
+			driver.manage().timeouts().pageLoadTimeout(Long.valueOf(getConfigProp("PAGE_LOAD_WAIT")), TimeUnit.SECONDS);
+			// navegate to application Url
+			navegateToBaseURL(driver);
+		}
+		else if (browser.equalsIgnoreCase("chrome")){
+			System.setProperty("webdriver.chrome.driver", getConfigProp("CHROME_DRIVER"));
+			logger.info("Chrome Driver prop: " + System.getProperty("webdriver.chrome.driver"));
+			caps  = DesiredCapabilities.chrome();
+
+			setCapsPlatform(nodePlatform, caps);
+			driver = new RemoteWebDriver(urlFactory(gridNodeURL), caps);
+
+			driver.manage().deleteAllCookies();
+			// The Implicit wait time is a property and apply for all findElement() calls
+			driver.manage().timeouts().implicitlyWait(Long.valueOf(getConfigProp("IMPLICIT_WAIT")), TimeUnit.SECONDS);
+			driver.manage().timeouts().pageLoadTimeout(Long.valueOf(getConfigProp("PAGE_LOAD_WAIT")), TimeUnit.SECONDS);
+			// navegate to application Url
+			navegateToBaseURL(driver);
+
+			
+		}
+		else if (browser.equalsIgnoreCase("ie")) {
+			
+			/*
+			 * To make it work with IE The Windows SEcurity Update KB3024390 was un-installed.
+			 */
+			System.setProperty("webdriver.ie.driver", getConfigProp("IE_DRIVER")); // Set IE driver Path
+			caps = DesiredCapabilities.internetExplorer();
+			caps.setCapability("ignoreZoomSetting", true);
+			caps.setCapability("requireWindowFocus", true);
+			caps.setCapability("enablePersistentHover", true);
+			caps.setCapability("disable-popup-blocking", true);
+			caps.setCapability("ignoreProtectedModeSettings", true);
+			caps.setCapability("nativeEvents", false);
+			caps.setCapability("unexpectedAlertBehaviour", "accept");
+			//caps.setCapability("logLevel", "DEBUG");
+
+			setCapsPlatform(nodePlatform, caps);
+			driver = new RemoteWebDriver(urlFactory(gridNodeURL), caps);
+
+			// The Implicit wait time is a property and apply for all findElement() calls
+			driver.manage().timeouts().implicitlyWait(Long.valueOf(getConfigProp("IMPLICIT_WAIT")), TimeUnit.SECONDS);
+			driver.manage().timeouts().pageLoadTimeout(Long.valueOf(getConfigProp("PAGE_LOAD_WAIT")), TimeUnit.SECONDS);
+			// IE hides cookies until the URL is accessed so
+			// We need to navegate to application Url first.
+			// then clear cookies, then Navegate again 
+			navegateToBaseURL(driver);
+			driver.manage().deleteAllCookies();
+			// navegate Again to application Url
+			navegateToBaseURL(driver);
+
+		} else {
+			logger.fatal("Initialization FATAL Error : Invalid Browser: " + browser + " Exiting Test .........");
+			System.exit(10);
+
+		}
+
+		UtilKit.waitForPageToLoad(driver, Integer.parseInt(getConfigProp("PAGE_LOAD_WAIT")));
+
+		logger.info("Browser : " + browser + " Version : " + caps.getCapability("version"));
+		logger.info(("\n\t\tImplicit wait = " + getConfigProp("IMPLICIT_WAIT") + "\n"));
+		logger.info("Driver Time out String " + driver.manage().timeouts().toString());
+
+		//driver.manage().window().maximize();
+		
+		if (logger == null) {
+			UtilKit.createLogger();
+		}	
+
+		return driver;
+	}
+
+	private static URL urlFactory(String gridNodeURL) {
+		try {
+			return new URL(gridNodeURL);
+		} catch (MalformedURLException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return null;
+	}
+
+	private static void setCapsPlatform(String nodePlatform, DesiredCapabilities caps) {
+		//Set the given running Node Platform
+		if(nodePlatform.equalsIgnoreCase("windows")){
+			caps.setPlatform(Platform.WINDOWS);
+		}
+		if(nodePlatform.equalsIgnoreCase("win10")){
+			caps.setPlatform(Platform.WIN10);
+		}
+		if(nodePlatform.equalsIgnoreCase("win8")){
+			caps.setPlatform(Platform.WIN8);
+		}
+		if(nodePlatform.equalsIgnoreCase("mac")){
+			caps.setPlatform(Platform.MAC);
+		}
+		if(nodePlatform.equalsIgnoreCase("linux")){
+			caps.setPlatform(Platform.LINUX);
+		}
+	}
 
 	public static WebDriver initTest(String project, String inApplication, String inBrowser, String inClassName) {
 
