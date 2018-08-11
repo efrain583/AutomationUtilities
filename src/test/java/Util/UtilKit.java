@@ -106,7 +106,7 @@ public class UtilKit {
 
 	private static Connection dbConn = null; // JDBC Connection
 
-	public static WebDriver initGridTest(String project, String inApplication, String inBrowser, String gridNodeURL, String nodePlatform, String inClassName) {
+	public static RemoteWebDriver initGridTest(String project, String inApplication, String inBrowser, String gridNodeURL, String nodePlatform, String inClassName) {
 
 		RemoteWebDriver driver = null;
 		
