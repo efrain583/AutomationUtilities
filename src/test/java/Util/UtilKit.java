@@ -466,10 +466,10 @@ public class UtilKit {
 
 		browser = getConfigProp("BROWSER");
 		if (browser.equals("firefox")) {
-			driver = new HtmlUnitDriver(BrowserVersion.FIREFOX_52);
+			driver = new HtmlUnitDriver(BrowserVersion.FIREFOX_38);
 
 		} else if (browser.equalsIgnoreCase("explorer")) {
-			driver = new HtmlUnitDriver(BrowserVersion.INTERNET_EXPLORER);
+			driver = new HtmlUnitDriver(BrowserVersion.INTERNET_EXPLORER_11);
 		} else {
 			logger.fatal("Invalid Browser : " + browser + " Exiting Test .........");
 			System.exit(10);
