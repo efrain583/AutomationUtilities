@@ -226,7 +226,7 @@ public class UtilKit {
 
 		UtilKit.waitForPageToLoad(driver, Integer.parseInt(getConfigProp("PAGE_LOAD_WAIT")));
 
-		logger.info("Browser : " + browser + " Version : " + caps.getCapability("version"));
+		logger.info("Browser : " + browser + " Version : "/* + caps.getCapability("version")*/);
 		logger.info(("\n\t\tImplicit wait = " + getConfigProp("IMPLICIT_WAIT") + "\n"));
 		logger.info("Driver Time out String " + driver.manage().timeouts().toString());
 
@@ -326,6 +326,7 @@ public class UtilKit {
 		else if (browser.equalsIgnoreCase("chrome")){
 			System.setProperty("webdriver.chrome.driver", getConfigProp("CHROME_DRIVER"));
 			logger.info("Chrome Driver prop: " + System.getProperty("webdriver.chrome.driver"));
+			caps = DesiredCapabilities.chrome();
 
 			ChromeOptions chromeOptions = new ChromeOptions();
 			driver = new ChromeDriver(chromeOptions);
