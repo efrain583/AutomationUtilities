@@ -310,8 +310,11 @@ public class UtilKit {
 //			caps.setVersion(version);
 
 			FirefoxOptions firefoxOptions = new FirefoxOptions(caps);
-			if(!getConfigProp("FIREFOX_BINARY").isEmpty())
-				firefoxOptions.setBinary(getConfigProp("FIREFOXBINARY"));
+			if(!getConfigProp("FIREFOX_BINARY").isEmpty()){
+				firefoxOptions.setBinary(getConfigProp("FIREFOX_BINARY"));
+				logger.info("FIREFOX BINARY Property: " + getConfigProp("FIREFOX_BINARY"));
+				logger.info("Firefox Binary : " + firefoxOptions.getBinary().toString());
+			}
 			driver = new FirefoxDriver(firefoxOptions);
 			driver.manage().deleteAllCookies();
 			// The Implicit wait time is a property and apply for all findElement() calls
