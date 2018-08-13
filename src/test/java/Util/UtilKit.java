@@ -65,9 +65,12 @@ import org.openqa.selenium.TakesScreenshot;
 import org.openqa.selenium.WebDriver;
 import org.openqa.selenium.WebElement;
 import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
 import org.openqa.selenium.firefox.FirefoxDriver;
+import org.openqa.selenium.firefox.FirefoxOptions;
 import org.openqa.selenium.htmlunit.HtmlUnitDriver;
 import org.openqa.selenium.ie.InternetExplorerDriver;
+import org.openqa.selenium.ie.InternetExplorerOptions;
 import org.openqa.selenium.interactions.Actions;
 import org.openqa.selenium.remote.DesiredCapabilities;
 import org.openqa.selenium.remote.RemoteWebDriver;
@@ -306,7 +309,10 @@ public class UtilKit {
 			version = getConfigProp("BROWSER_VERSION");
 //			caps.setVersion(version);
 
-			driver = new FirefoxDriver(caps);
+			FirefoxOptions firefoxOptions = new FirefoxOptions(caps);
+			if(!getConfigProp("FIREFOX_BINARY").isEmpty())
+				firefoxOptions.setBinary(getConfigProp("FIREFOXBINARY"));
+			driver = new FirefoxDriver(firefoxOptions);
 			driver.manage().deleteAllCookies();
 			// The Implicit wait time is a property and apply for all findElement() calls
 			driver.manage().timeouts().implicitlyWait(Long.valueOf(getConfigProp("IMPLICIT_WAIT")), TimeUnit.SECONDS);
@@ -317,9 +323,9 @@ public class UtilKit {
 		else if (browser.equalsIgnoreCase("chrome")){
 			System.setProperty("webdriver.chrome.driver", getConfigProp("CHROME_DRIVER"));
 			logger.info("Chrome Driver prop: " + System.getProperty("webdriver.chrome.driver"));
-			caps  = DesiredCapabilities.chrome();
 
-			driver = new ChromeDriver(caps);
+			ChromeOptions chromeOptions = new ChromeOptions();
+			driver = new ChromeDriver(chromeOptions);
 			driver.manage().deleteAllCookies();
 			// The Implicit wait time is a property and apply for all findElement() calls
 			driver.manage().timeouts().implicitlyWait(Long.valueOf(getConfigProp("IMPLICIT_WAIT")), TimeUnit.SECONDS);
@@ -345,7 +351,8 @@ public class UtilKit {
 			caps.setCapability("unexpectedAlertBehaviour", "accept");
 			//caps.setCapability("logLevel", "DEBUG");
 
-			driver = new InternetExplorerDriver(caps);
+			InternetExplorerOptions ieOptions = new InternetExplorerOptions(caps);
+			driver = new InternetExplorerDriver(ieOptions);
 			// The Implicit wait time is a property and apply for all findElement() calls
 			driver.manage().timeouts().implicitlyWait(Long.valueOf(getConfigProp("IMPLICIT_WAIT")), TimeUnit.SECONDS);
 			driver.manage().timeouts().pageLoadTimeout(Long.valueOf(getConfigProp("PAGE_LOAD_WAIT")), TimeUnit.SECONDS);
